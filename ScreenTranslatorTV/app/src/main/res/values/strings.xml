@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">ScreenTranslatorTV</string>
+    <string name="start_server">Start server</string>
+    <string name="join_server">Join server</string>
+    <string name="ip">IP:</string>
+    <string name="commandPort">Command port:</string>
+    <string name="videoPort">Video port:</string>
+    <string name="audioPort">Audio port:</string>
+    <string name="start">Start</string>
+    <string name="stop">Stop</string>
+    <string name="standard_video_port">8002</string>
+    <string name="standard_audio_port">8003</string>
+    <string name="standard_command_port">8001</string>
+    <string name="connect">Connect</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="cansel">Cansel</string>
+    <string name="ok">OK</string>
+    <string name="share">Share</string>
+    <string name="receive">Receive</string>
+    <string name="options">options</string>
+</resources>

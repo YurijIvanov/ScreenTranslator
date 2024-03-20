@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox alignment="CENTER_RIGHT" prefHeight="307.0" prefWidth="268.0" spacing="20.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.yurijivanov.screentranslatorpc.MainController">
+    <padding>
+        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+    </padding>
+   <!-- Start server -->
+   <VBox alignment="CENTER" VBox.vgrow="ALWAYS">
+      <Label text="Start server">
+         <font>
+            <Font size="30.0" />
+         </font>
+      </Label>
+      <Separator />
+      <HBox alignment="CENTER" HBox.hgrow="ALWAYS">
+
+         <Label text="IP:">
+            <font>
+               <Font size="14.0" />
+            </font>
+         </Label>
+
+         <Separator orientation="VERTICAL" HBox.hgrow="ALWAYS" />
+         <!--Label fx:id="ip" alignment="CENTER">
+            <font>
+                     <Font size="14.0" />
+                  </font>
+               </Label-->
+         <ChoiceBox fx:id="ip" prefHeight="30.0" prefWidth="203.0" style="-fx-font-size: 14px;">
+         </ChoiceBox>
+      </HBox>
+
+      <Separator VBox.vgrow="ALWAYS" />
+
+      <HBox alignment="CENTER" HBox.Hgrow="ALWAYS">
+         <Button fx:id="serverButton" text="Start">
+            <font>
+               <Font size="14.0" />
+            </font>
+         </Button>
+         <Separator orientation="VERTICAL" />
+         <Button fx:id="receiveButton" text="Receive" visible="false">
+            <font>
+               <Font size="14.0" />
+            </font>
+         </Button>
+      </HBox>
+   </VBox>
+
+   <!-- Join server -->
+   <VBox alignment="CENTER" VBox.vgrow="ALWAYS">
+      <Separator VBox.vgrow="ALWAYS" />
+      <Label alignment="CENTER" text="Join server">
+         <font>
+            <Font size="32.0" />
+         </font>
+      </Label>
+      <Separator prefWidth="200.0" />
+      <HBox alignment="CENTER" HBox.hgrow="ALWAYS">
+         <Label text="IP:">
+            <font>
+               <Font size="14.0" />
+            </font>
+         </Label>
+         <Separator orientation="VERTICAL" prefHeight="200.0" />
+         <TextField fx:id="join_ip_tf" prefHeight="39.0" prefWidth="207.0" promptText="192.168.1.100" HBox.hgrow="ALWAYS" />
+      </HBox>
+
+      <Separator prefWidth="200.0" />
+
+      <HBox alignment="CENTER" HBox.hgrow="ALWAYS">
+
+         <Button fx:id="joinButton" text="Start">
+            <font>
+               <Font size="14.0" />
+            </font>
+         </Button>
+
+         <Separator orientation="VERTICAL" />
+
+         <Button fx:id="shareButton" text="Share" visible="false">
+            <font>
+               <Font size="14.0" />
+            </font>
+         </Button>
+
+      </HBox>
+
+   </VBox>
+   <HBox>
+      <!--Button onAction="#test" text="test">
+         <font>
+            <Font size="14.0" />
+         </font>
+      </Button-->
+      <Button alignment="TOP_LEFT" mnemonicParsing="false" onAction="#goOptions" text="Options">
+         <font>
+            <Font size="14.0" />
+         </font>
+      </Button>
+      <Separator orientation="VERTICAL" />
+      <ChoiceBox fx:id="screens" visible="false" />
+   </HBox>
+   <!--ImageView VBox.vgrow="ALWAYS" fx:id="screen" fitHeight="350" fitWidth="600" /-->
+</VBox>

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<AnchorPane prefHeight="307.0" prefWidth="268.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.yurijivanov.screentranslatorpc.SettingsController">
+    <VBox layoutX="5.0" layoutY="89.0">
+        <Separator VBox.vgrow="ALWAYS" />
+
+        <HBox alignment="CENTER" HBox.hgrow="ALWAYS">
+            <Label alignment="BASELINE_LEFT" text="Command port:">
+                <font>
+                    <Font size="14" />
+                </font>
+            </Label>
+
+            <Separator orientation="VERTICAL" HBox.hgrow="ALWAYS" />
+
+            <TextField fx:id="command_port_tf" text="8001">
+                <font>
+                    <Font size="14" />
+                </font>
+            </TextField>
+        </HBox>
+
+        <Separator VBox.vgrow="ALWAYS" />
+
+        <HBox alignment="CENTER" HBox.hgrow="ALWAYS">
+            <Label alignment="BASELINE_LEFT" text="Video port:">
+                <font>
+                    <Font size="14" />
+                </font>
+            </Label>
+
+            <Separator orientation="VERTICAL" HBox.hgrow="ALWAYS" />
+
+            <TextField fx:id="video_port_tf" text="8002">
+                <font>
+                    <Font size="14" />
+                </font>
+            </TextField>
+        </HBox>
+
+        <Separator VBox.vgrow="ALWAYS" />
+
+        <HBox alignment="CENTER" HBox.hgrow="ALWAYS">
+            <Label alignment="BASELINE_LEFT" text="Audio port:">
+                <font>
+                    <Font size="14" />
+                </font>
+            </Label>
+
+            <Separator orientation="VERTICAL" HBox.hgrow="ALWAYS" />
+
+            <TextField fx:id="audio_port_tf" text="8003">
+                <font>
+                    <Font size="14" />
+                </font>
+            </TextField>
+        </HBox>
+
+        <Separator VBox.vgrow="ALWAYS" />
+    </VBox>
+    <Button alignment="BOTTOM_LEFT" layoutX="14.0" layoutY="268.0" mnemonicParsing="false" text="Back" onAction="#goMain"/>
+</AnchorPane>
