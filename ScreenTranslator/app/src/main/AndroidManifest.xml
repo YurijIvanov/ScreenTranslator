@@ -33,15 +33,6 @@
             android:exported="false"
             android:permission="TODO"
             android:foregroundServiceType="mediaProjection"/>
-        <service
-            android:name=".GetClientService"
-            android:enabled="true"
-            android:permission="TODO" />
-        <service
-            android:name=".GetSocketService"
-            android:enabled="true"
-            android:permission="TODO" />
-
         <receiver
             android:name=".NotificationButton"
             android:exported="false">
@@ -61,7 +52,8 @@
 
         <activity
             android:name=".SurfaceActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:configChanges="orientation|screenSize" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

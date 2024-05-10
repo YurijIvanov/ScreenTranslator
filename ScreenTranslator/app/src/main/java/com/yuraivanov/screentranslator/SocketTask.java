@@ -17,8 +17,8 @@ import java.net.Socket;
 
 public class SocketTask {
     private static final String Tag = "SocketTask";
-    private static ServerSocket videoServer, audioServer, commandServer;
-    private static Socket videoSocket, audioSocket, commandSocket;
+    private static ServerSocket videoServer, /*audioServer,*/ commandServer;
+    private static Socket videoSocket, /*audioSocket,*/ commandSocket;
     private static boolean stop,task;
 
     private static final Handler handler = new Handler(Looper.getMainLooper());
@@ -53,8 +53,8 @@ public class SocketTask {
         MainActivity.setClientWork(true);
         commandServer = createServer(DeviceInfo.getCommandPort());
         videoServer = createServer(DeviceInfo.getVideoPort());
-        audioServer = createServer(DeviceInfo.getAudioPort());
-        if (commandServer == null || videoServer == null || audioServer == null) {
+        //audioServer = createServer(DeviceInfo.getAudioPort());
+        if (commandServer == null || videoServer == null /*|| audioServer == null*/) {
             stop();
         } else {
             new Thread(()->{
@@ -78,7 +78,7 @@ public class SocketTask {
                 }
                 Log.d(Tag,"startServer videoSocket thread end");
             }).start();
-            new Thread(()->{
+            /*new Thread(()->{
                 Log.d(Tag,"startServer audioSocket thread start");
                 while(MainActivity.isWork()&&MainActivity.isClientWork()&&audioSocket==null){
                     audioSocket = createClient(audioServer);
@@ -88,7 +88,7 @@ public class SocketTask {
                     changeUi(true);
                 }
                 Log.d(Tag,"startServer audioSocket thread end");
-            }).start();
+            }).start();*/
             checkStop();
         }
     }
@@ -119,7 +119,7 @@ public class SocketTask {
             }
             Log.d(Tag,"startSocket videoSocket thread end");
         }).start();
-        new Thread(()->{
+        /*new Thread(()->{
             Log.d(Tag,"startSocket audioSocket thread start");
             while(MainActivity.isWork()&&MainActivity.isSocketWork()&&audioSocket==null){
                 audioSocket = createSocket(DeviceInfo.getAudioPort());
@@ -129,7 +129,7 @@ public class SocketTask {
                 changeUi(true);
             }
             Log.d(Tag,"startSocket audioSocket thread end");
-        }).start();
+        }).start();*/
         checkStop();
     }
     private static void checkStop() {
@@ -229,7 +229,7 @@ public class SocketTask {
             }
             videoServer=null;
         }
-        if(audioSocket!=null){
+        /*if(audioSocket!=null){
             try {
                 audioSocket.close();
             } catch (IOException e) {
@@ -244,7 +244,7 @@ public class SocketTask {
                 Log.e(Tag,"videoServer close error" + e.getMessage());
             }
             audioServer=null;
-        }
+        }*/
         if(SurfaceActivity.isReceiving()){
             SurfaceActivity.stopReceiving();
         }
@@ -276,7 +276,7 @@ public class SocketTask {
         }
         return null;
     }
-    public static OutputStream getAudioOutputStream(){
+    /*public static OutputStream getAudioOutputStream(){
         if(audioSocket!=null && audioSocket.isConnected() && !audioSocket.isClosed()) {
             try {
                 return audioSocket.getOutputStream();
@@ -288,7 +288,7 @@ public class SocketTask {
             }
         }
         return null;
-    }
+    }*/
     public static InputStream getCommandInput(){
         if(commandSocket!=null && commandSocket.isConnected() && !commandSocket.isClosed()) {
             try {
@@ -315,7 +315,7 @@ public class SocketTask {
         }
         return null;
     }
-    public static InputStream getAudioInput(){
+    /*public static InputStream getAudioInput(){
         if(audioSocket!=null && audioSocket.isConnected() && !audioSocket.isClosed()) {
             try {
                 return audioSocket.getInputStream();
@@ -327,9 +327,9 @@ public class SocketTask {
             }
         }
         return null;
-    }
+    }*/
     public static void changeUi(boolean bol) {
-        boolean vision = bol && ((videoSocket!=null && videoSocket.isConnected()&& !videoSocket.isClosed()) && (audioSocket!=null && audioSocket.isConnected()&& !audioSocket.isClosed()));
+        boolean vision = bol && ((videoSocket!=null && videoSocket.isConnected()&& !videoSocket.isClosed()) /*&& (audioSocket!=null && audioSocket.isConnected()&& !audioSocket.isClosed())*/);
         handler.post(()->MainActivity.changeUi(vision,task));
         if(!vision){
             if(task) SurfaceActivity.stopReceiving();

@@ -23,7 +23,7 @@ import java.io.ObjectInputStream;
 public class SurfaceActivity extends AppCompatActivity {
     private static final String TAG = "SurfaceActivity";
     private static ImageView screen;
-    private static AudioTrack audioTrack;
+    //private static AudioTrack audioTrack;
     private static boolean receiving=true;
     private static final Handler handler = new Handler(Looper.getMainLooper());
     private static Activity activity;
@@ -52,15 +52,15 @@ public class SurfaceActivity extends AppCompatActivity {
     //    }
     //}
     public static void startReceiving(){
-        InputStream videoInput,audioInput;
+        InputStream videoInput/*,audioInput*/;
         /*int bufferSize = AudioRecord.getMinBufferSize(44100,
                 AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT);
         audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, 4100,
                 AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT,
                 bufferSize, AudioTrack.MODE_STREAM);*/
         videoInput=SocketTask.getVideoInput();
-        audioInput=SocketTask.getAudioInput();
-        if(videoInput==null || audioInput==null){
+        //audioInput=SocketTask.getAudioInput();
+        if(videoInput==null /*|| audioInput==null*/){
             stopReceiving();
         }else{
             receiving=true;
@@ -92,7 +92,7 @@ public class SurfaceActivity extends AppCompatActivity {
                 }
                 Log.d(TAG,"videothread end");
             }).start();
-            new Thread(() -> {
+            /*new Thread(() -> {
                 /*try {
                     byte[] buffer = new byte[bufferSize];
                     int numRead;
@@ -101,8 +101,8 @@ public class SurfaceActivity extends AppCompatActivity {
                     }
                 } catch (IOException e) {
                     Log.e(TAG, "audioThread error " + e.getMessage());
-                }*/
-            }).start();
+                }
+            }).start();*/
             //audioTrack.play();
         }
     }
@@ -110,10 +110,10 @@ public class SurfaceActivity extends AppCompatActivity {
     public static void stopReceiving(){
         Log.d(TAG,"stopReceiving");
         receiving=false;
-        if(audioTrack!=null) {
+        /*if(audioTrack!=null) {
             audioTrack.stop();
             audioTrack=null;
-        }
+        }*/
         if(activity!=null) {
             activity.finish();
         }

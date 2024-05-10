@@ -26,9 +26,11 @@ import android.text.TextWatcher;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
+import android.widget.Spinner;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -53,33 +55,35 @@ public class MainActivity extends AppCompatActivity{
     private static final int NOTIFICATION_REQUEST_CODE = 104;
     private static final int NOTIFICATION_ID = 101;
     private static final String TAG="MainActivity";
-    private final Handler handler = new Handler(Looper.getMainLooper());
     @SuppressLint("StaticFieldLeak")
-    private static TextView ipText;
-    @SuppressLint("StaticFieldLeak")
-    private static EditText ipEditText, ipJoinEditText;
+    private static EditText ipJoinEditText;
     private static MediaProjectionManager mediaProjectionManager;
     private static MediaProjection mediaProjection;
     private static VirtualDisplay virtualDisplay;
     private static Intent mediaService;
     private static AudioRecord audioRecord;
     private static ImageReader imageReader;
-    private static boolean recording =false, clientWork, socketWork, work;
+    private static boolean sharing =false, clientWork, socketWork, work;
     @SuppressLint("StaticFieldLeak")
     private static Context context;
-    private boolean ipBol=true;
     @SuppressLint("StaticFieldLeak")
     private static Button serverButton, joinButton, shareButton,receiveButton;
     private DisplayMetrics metrics;
     private static Intent surfaceActivity;
+    private static HandlerThread handlerThread;
+    private static Handler h;
+    private OutputStream videoOutputStream/*, audioOutputStream*/;
+    @SuppressLint("StaticFieldLeak")
+    private static Spinner spinner;
+    private ArrayAdapter<String> spinAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        MediaService.setMainIntent(getIntent());
+        mediaService = new Intent(MainActivity.this, MediaService.class);
         metrics=getResources().getDisplayMetrics();
         setContentView(R.layout.activity_main);
-        ipText=findViewById(R.id.thisIp);
-        ipEditText=findViewById(R.id.editThisIp);
         ipJoinEditText=findViewById(R.id.editJoinIp);
         joinButton = findViewById(R.id.joinButton);
         serverButton = findViewById(R.id.serverButton);
@@ -87,11 +91,20 @@ public class MainActivity extends AppCompatActivity{
         receiveButton=findViewById(R.id.receivingButton);
         surfaceActivity = new Intent(this, SurfaceActivity.class);
         context = this;
-        ipText.setOnClickListener(view -> {
-            if(!ipText.getText().toString().isEmpty()){
-                if(!ipEditText.getText().toString().equals(ipText.getText().toString())){
-                    insertIPDialog();
-                }
+        spinner = findViewById(R.id.spinner);
+        spinAdapter = new ArrayAdapter<>(this, R.layout.simple_spinner_item);
+        spinAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(spinAdapter);
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                stopSharing();
+                SocketTask.stop();
+                Log.d(TAG,"spinner onItemSelected: " + parent.getSelectedItem());
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
             }
         });
         clientWork=false;
@@ -135,42 +148,13 @@ public class MainActivity extends AppCompatActivity{
         });
         shareButton.setOnClickListener(view -> {
             Log.d(TAG, "shareButton");
-            if (shareButton.getVisibility() == View.VISIBLE) {
-                if(recording){
-                    Log.e(TAG, "STOP SHARING");
-                    stopSharing();
-                    NotificationManagerCompat notificationManager = NotificationManagerCompat.from(MainActivity.this);
-                    notificationManager.cancel(NOTIFICATION_ID);
-                }else {
-                    Log.e(TAG, "START SHARING");
-                    recording=true;
-                    startScreenCapture();
-                }
-            }
-        });
-        ipEditText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                ipBol=false;
-            }
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                ipBol=false;
-            }
-            @Override
-            public void afterTextChanged(Editable editable) {
-                String ipString=ipEditText.getText().toString();
-                if(ipString.isEmpty()){
-                    new AlertDialog.Builder(context)
-                            .setTitle("Empty input line")
-                            .setMessage("The IP address entry line must not be empty, please enter IP address.")
-                            .create();
-                }else if(!isValidIP(ipString)){
-                    new AlertDialog.Builder(context).setTitle("Incorrect IP address").setMessage("IP address entered incorrectly, please check IP address.").create();
-                }else{
-                    DeviceInfo.setIp(ipString);
-                }
-                ipBol=true;
+            if(sharing){
+                Log.e(TAG, "STOP SHARING");
+                stopSharing();
+            }else {
+                Log.e(TAG, "START SHARING");
+                sharing=true;
+                startScreenCapture();
             }
         });
         ipJoinEditText.addTextChangedListener(new TextWatcher() {
@@ -183,10 +167,10 @@ public class MainActivity extends AppCompatActivity{
                 String ipJoinString=ipJoinEditText.getText().toString();
                 if(ipJoinString.isEmpty()){
                     new AlertDialog.Builder(context).setTitle("Empty input line").setMessage("The IP address entry line must not be empty, please enter IP address.").create();
-                }else if(!isValidIP(ipJoinString)){
-                    new AlertDialog.Builder(context).setTitle("Incorrect IP address").setMessage("IP address entered incorrectly, please check IP address.").create();
-                }else{
+                }else if (isValidIP(ipJoinString)) {
                     DeviceInfo.setIpJoin(ipJoinString);
+                } else {
+                    new AlertDialog.Builder(context).setTitle("Incorrect IP address").setMessage("IP address entered incorrectly, please check IP address.").create();
                 }
                 Log.d(TAG, "ipJoinString= " + ipJoinString);
             }
@@ -205,6 +189,7 @@ public class MainActivity extends AppCompatActivity{
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION}, PERMISSION_REQUEST_CODE);
         }
     }
+
     public static boolean isClientWork() {
         return clientWork;
     }
@@ -241,8 +226,7 @@ public class MainActivity extends AppCompatActivity{
         }
     }
     private static void enableUI(boolean enable,boolean task){
-        ipText.setEnabled(enable);
-        ipEditText.setEnabled(enable);
+        spinner.setEnabled(enable);
         ipJoinEditText.setEnabled(enable);
         if(task){
             joinButton.setEnabled(enable);
@@ -254,7 +238,6 @@ public class MainActivity extends AppCompatActivity{
             else joinButton.setText(R.string.disconnect);
         }
     }
-
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -284,11 +267,7 @@ public class MainActivity extends AppCompatActivity{
             if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.UPSIDE_DOWN_CAKE){
                 screenCaptureIntent=mediaProjectionManager.createScreenCaptureIntent(MediaProjectionConfig.createConfigForDefaultDisplay());
             }else screenCaptureIntent=mediaProjectionManager.createScreenCaptureIntent();
-            if(mediaService==null) {
-                mediaService = new Intent(MainActivity.this, MediaService.class);
-                MediaService.setMainIntent(getIntent());
-                startForegroundService(mediaService);
-            }
+            startForegroundService(mediaService);
             startActivityForResult(screenCaptureIntent,RECORD_REQUEST_CODE);
         }else initRecording();
     }
@@ -306,79 +285,77 @@ public class MainActivity extends AppCompatActivity{
             }
         }
     }
-    private void initRecording(){
+    private Handler handler = new Handler(Looper.getMainLooper());
+    private void initRecording() {
         if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             Log.e(TAG, "Manifest permission record audio DENIED");
             finish();
-        }else if(mediaProjection==null) {
-            Log.e(TAG,"mediaProjection null");
-        }else{
-            OutputStream videoOutputStream = SocketTask.getVideoOutputStream();
-            OutputStream audioOutputStream = SocketTask.getAudioOutputStream();
-            if (videoOutputStream == null && audioOutputStream == null) {
+        } else if (mediaProjection == null) {
+            Log.e(TAG, "mediaProjection null");
+        } else {
+            videoOutputStream = SocketTask.getVideoOutputStream();
+            //audioOutputStream = SocketTask.getAudioOutputStream();
+            if (videoOutputStream == null /*&& audioOutputStream == null*/) {
                 SocketTask.stop();
                 stopSharing();
                 return;
             }
-            HandlerThread handlerThread = new HandlerThread("ImageHandlerThread");
+            handlerThread = new HandlerThread("ImageHandlerThread");
             handlerThread.start();
-            Handler h = new Handler(handlerThread.getLooper());
+            h = new Handler(handlerThread.getLooper());
             mediaProjection.registerCallback(new MediaProjection.Callback() {
                 @Override
                 public void onStop() {
                     super.onStop();
-                    if(virtualDisplay!=null) {
+                    if (imageReader != null) {
+                        imageReader.close();
+                        imageReader = null;
+                    }
+                    if (virtualDisplay != null) {
                         virtualDisplay.release();
                         virtualDisplay = null;
-                    }
-                    if(imageReader!=null){
-                        imageReader.close();
-                        imageReader=null;
                     }
                 }
                 @Override
                 public void onCapturedContentResize(int width, int height) {
                     super.onCapturedContentResize(width, height);
-                    if(virtualDisplay!=null){
-                        virtualDisplay.resize(width,height,metrics.densityDpi);
-                    }
                 }
                 @Override
                 public void onCapturedContentVisibilityChanged(boolean isVisible) {
                     super.onCapturedContentVisibilityChanged(isVisible);
                 }
-            },h);
+            }, h);
             imageReader = ImageReader.newInstance(metrics.widthPixels, metrics.heightPixels, PixelFormat.RGBA_8888, 1);
-            VirtualDisplay.Callback vdCallback = new VirtualDisplay.Callback() {
-                @Override
-                public void onPaused() {
-                    super.onPaused();
-                }
-                @Override
-                public void onResumed() {
-                    super.onResumed();
-                }
-                @Override
-                public void onStopped() {
-                    super.onStopped();
-                    if(virtualDisplay!=null) {
-                        virtualDisplay.release();
-                        virtualDisplay = null;
-                    }
-                    if(imageReader!=null){
-                        imageReader.close();
-                        imageReader=null;
-                    }
-                }
-            };
             virtualDisplay = mediaProjection.createVirtualDisplay("screen", metrics.widthPixels, metrics.heightPixels, metrics.densityDpi,
-                    DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR, imageReader.getSurface(), vdCallback, h);
+                    DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR, imageReader.getSurface(), new VirtualDisplay.Callback() {
+                        @Override
+                        public void onPaused() {
+                            super.onPaused();
+                        }
+                        @Override
+                        public void onResumed() {
+                            super.onResumed();
+                        }
+                        @Override
+                        public void onStopped() {
+                            super.onStopped();
+                            if(virtualDisplay!=null) {
+                                virtualDisplay.release();
+                                virtualDisplay = null;
+                            }
+                            if(imageReader!=null){
+                                imageReader.close();
+                                imageReader=null;
+                            }
+                        }
+                    }, h);
             imageReader.setOnImageAvailableListener(reader -> {
                 Log.d(TAG + " imageReader","Image available");
                 Image image = reader.acquireLatestImage();
                 if (image!=null) {
-                    Bitmap bitmap = Bitmap.createBitmap((metrics.widthPixels + (image.getPlanes()[0].getRowStride() - image.getPlanes()[0].getPixelStride() * metrics.widthPixels) / image.getPlanes()[0].getPixelStride()),
-                            metrics.heightPixels, Bitmap.Config.ARGB_8888);
+                    Log.d(TAG,"image width = " + (image.getWidth()+8) + "; height = " + image.getHeight() + ";\nmetrics width = " + metrics.widthPixels + "; height = " + metrics.heightPixels + ";");
+                    Bitmap bitmap = Bitmap.createBitmap(image.getWidth()+8,image.getHeight(), Bitmap.Config.ARGB_8888);
+                    Log.d(TAG,"math width =" + (metrics.widthPixels + (image.getPlanes()[0].getRowStride() - image.getPlanes()[0].getPixelStride() * metrics.widthPixels) / image.getPlanes()[0].getPixelStride()));
                     bitmap.copyPixelsFromBuffer(image.getPlanes()[0].getBuffer());
                     ByteArrayOutputStream stream = new ByteArrayOutputStream();
                     bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
@@ -400,36 +377,12 @@ public class MainActivity extends AppCompatActivity{
                     }
                     image.close();
                 }
-            },h);
-            /*audioOutputStream = GetSocketService.getAudioOutputStream();
-            if (audioOutputStream != null) {
-                /*int bufferSize = AudioRecord.getMinBufferSize(44100,
-                        AudioFormat.CHANNEL_IN_STEREO, AudioFormat.ENCODING_PCM_16BIT);
-                audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC, 44100, AudioFormat.CHANNEL_IN_STEREO,
-                        AudioFormat.ENCODING_PCM_16BIT, bufferSize);
-                audioRecord.startRecording();
-                audioThread = executorService.submit(new Runnable() {
-                    @Override
-                    public void run() {
-                        while (recording) {
-                            /*byte[] audioBuffer = new byte[bufferSize];
-                            int read = audioRecord.read(audioBuffer, 0, bufferSize);
-                            try {
-                                audioOutputStream.write(audioBuffer, 0, read);
-                                audioOutputStream.flush();
-                            } catch (IOException e) {
-                                Log.e(TAG, "Sharing audio error " + e.getMessage());
-                                stopSharing();
-                            }
-                        }
-                    }
-                });
-            }*/
+            }, h);
         }
     }
     public static void stopSharing() {
         Log.d(TAG,"stopSharing");
-        recording=false;
+        sharing=false;
         if(virtualDisplay!=null){
             virtualDisplay.release();
             virtualDisplay=null;
@@ -450,19 +403,21 @@ public class MainActivity extends AppCompatActivity{
             audioRecord.release();
             audioRecord = null;
         }
-        if(mediaService!=null) {
-            context.stopService(mediaService);
+        h=null;
+        if(handlerThread!=null) {
+            handlerThread.quit();
+            handlerThread=null;
         }
+        context.stopService(mediaService);
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
         notificationManager.cancel(NOTIFICATION_ID);
     }
-
     @Override
     protected void onStart() {
         super.onStart();
-        work=true;
+        work = true;
         new Thread(() -> {
-            while(work) {
+            while (work) {
                 try {
                     Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
                     while (interfaces.hasMoreElements()) {
@@ -472,11 +427,16 @@ public class MainActivity extends AppCompatActivity{
                             while (addresses.hasMoreElements()) {
                                 InetAddress address = addresses.nextElement();
                                 if (address instanceof Inet4Address) {
-                                    if(!ipText.getText().equals(address.getHostAddress())){
-                                        runOnUiThread(() -> ipText.setText(address.getHostAddress()));
-                                    }
-                                    if(ipEditText.getText()==null || ipEditText.getText().toString().isEmpty() && ipBol && !ipEditText.getText().toString().equals(address.getHostAddress())) {
-                                        runOnUiThread(() -> ipEditText.setText(address.getHostAddress()));
+                                    String addres = address.getHostAddress();
+                                    if (addres != null) {
+                                        handler.post(() -> {
+                                            if (!spincontain(addres)) {
+                                                spinAdapter.add(addres);
+                                                if (DeviceInfo.getIp().isEmpty()) {
+                                                    DeviceInfo.setIp(addres);
+                                                }
+                                            }
+                                        });
                                     }
                                 }
                             }
@@ -489,17 +449,16 @@ public class MainActivity extends AppCompatActivity{
             }
         }).start();
     }
-    private void insertIPDialog() {
-        Log.d(TAG, "insertIPDialog");
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Replace IP")
-                .setMessage("Replace the IP address input line with your IP address?")
-                .setPositiveButton("OK", (dialogInterface, i) -> {
-                    ipEditText.setText(ipText.getText().toString());
-                    DeviceInfo.setIp(ipEditText.getText().toString());
-                })
-                .setNegativeButton("Cansel", null);
-        builder.show();
+    private boolean spincontain(String item){
+        if(!item.isEmpty()){
+            for(int i=0;i<spinAdapter.getCount();i++){
+                String text = spinAdapter.getItem(i);
+                if (text.contains(item)){
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     @Override
@@ -516,6 +475,7 @@ public class MainActivity extends AppCompatActivity{
         SocketTask.stop();
         stopSharing();
         SurfaceActivity.stopReceiving();
+        System.exit(0);
     }
     private boolean isValidIP(String ipAddress) {
         if (ipAddress == null || ipAddress.isEmpty()) {

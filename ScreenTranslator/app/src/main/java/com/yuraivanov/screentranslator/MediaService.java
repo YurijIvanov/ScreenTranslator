@@ -18,9 +18,10 @@ import androidx.core.app.NotificationCompat;
 
 public class MediaService extends Service {
     private static final int NOTIFICATION_ID = 101;
-    private static Intent service, mainIntent;
+    private static Intent mainIntent;
     public static boolean isRecording=true;
     private static final String CHANNEL_ID = "ScreeTranslator", TAG="MediaService";
+    private NotificationManager manager;
     public MediaService() {
     }
 
@@ -31,32 +32,16 @@ public class MediaService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if(intent!=null){
-            if(service==null) {
-                service = intent;
-            }
-        }else{
-            stopSelf();
-        }
-        if(!isRecording){
-            stopSelf();
-        }
-        return START_STICKY;
+        return START_NOT_STICKY;
     }
-
     public static void setMainIntent(Intent mainIntent) {
         MediaService.mainIntent = mainIntent;
-    }
-    public static void stopRecording() {
-        Log.e(TAG,"stopRecording");
-        isRecording=false;
-        service=null;
     }
     @Override
     public void onCreate() {
         super.onCreate();
+        manager = getSystemService(NotificationManager.class);
         Log.e(TAG,"onCreate");
-        isRecording=true;
         if(Build.VERSION.SDK_INT>=34){
             startForeground(NOTIFICATION_ID,buildNotification(),FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION);
         }else startForeground(NOTIFICATION_ID, buildNotification());
@@ -81,7 +66,6 @@ public class MediaService extends Service {
             NotificationChannel channel = new NotificationChannel(CHANNEL_ID,
                     "Screen Recording Channel",
                     NotificationManager.IMPORTANCE_DEFAULT);
-            NotificationManager manager = getSystemService(NotificationManager.class);
             manager.createNotificationChannel(channel);
         }
     }
@@ -92,6 +76,6 @@ public class MediaService extends Service {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             stopForeground(true);
         }
-        stopRecording();
+        manager.cancel(NOTIFICATION_ID);
     }
 }

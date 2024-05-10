@@ -1,11 +1,7 @@
 package com.yuraivanov.screentranslator;
-
-import android.util.DisplayMetrics;
-
 public class DeviceInfo {
     private static String ip="", ipJoin="";
     private static int commandPort = 8001, videoPort = 8002, audioPort = 8003;
-    //private static DisplayMetrics metrics;
     public static String getIp() {
         return ip;
     }
