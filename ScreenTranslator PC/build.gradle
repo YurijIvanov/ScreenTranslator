@@ -26,7 +26,7 @@ tasks.withType(JavaCompile) {
 
 application {
     mainModule = 'com.yurijivanov.screentranslatorpc'
-    mainClass = 'com.yurijivanov.screentranslatorpc.HelloApplication'
+    mainClass = 'com.yurijivanov.screentranslatorpc.MainApplication'
 }
 
 javafx {
@@ -35,9 +35,10 @@ javafx {
 }
 
 dependencies {
-
     testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
+    implementation 'org.openjfx:javafx-controls:16'
+    implementation 'org.openjfx:javafx-fxml:16'
 }
 
 test {

@@ -26,11 +26,6 @@
          </Label>
 
          <Separator orientation="VERTICAL" HBox.hgrow="ALWAYS" />
-         <!--Label fx:id="ip" alignment="CENTER">
-            <font>
-                     <Font size="14.0" />
-                  </font>
-               </Label-->
          <ChoiceBox fx:id="ip" prefHeight="30.0" prefWidth="203.0" style="-fx-font-size: 14px;">
          </ChoiceBox>
       </HBox>
@@ -75,7 +70,7 @@
 
       <HBox alignment="CENTER" HBox.hgrow="ALWAYS">
 
-         <Button fx:id="joinButton" text="Start">
+         <Button fx:id="joinButton" text="Connect">
             <font>
                <Font size="14.0" />
             </font>
@@ -93,11 +88,6 @@
 
    </VBox>
    <HBox>
-      <!--Button onAction="#test" text="test">
-         <font>
-            <Font size="14.0" />
-         </font>
-      </Button-->
       <Button alignment="TOP_LEFT" mnemonicParsing="false" onAction="#goOptions" text="Options">
          <font>
             <Font size="14.0" />
@@ -106,5 +96,4 @@
       <Separator orientation="VERTICAL" />
       <ChoiceBox fx:id="screens" visible="false" />
    </HBox>
-   <!--ImageView VBox.vgrow="ALWAYS" fx:id="screen" fitHeight="350" fitWidth="600" /-->
 </VBox>

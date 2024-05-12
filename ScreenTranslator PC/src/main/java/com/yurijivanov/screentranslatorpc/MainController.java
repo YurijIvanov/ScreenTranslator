@@ -33,12 +33,10 @@ public class MainController {
     public static void setInstance(MainController instance) {
         MainController.instance = instance;
     }
-
     @FXML
     private void goOptions() {
         UI.showSettingsScene();
     }
-
     public void initialize(){
         System.out.println(Tag + " initialize");
         Alert alert=new Alert(Alert.AlertType.INFORMATION);
@@ -54,7 +52,6 @@ public class MainController {
                 if(!isInValidIP(newValue)){
                     alert.setContentText("IP address entered incorrectly, please check IP address.");
                 }else{
-
                     DeviceInfo.setIpJoin(newValue);
                 }
             }
@@ -66,11 +63,13 @@ public class MainController {
                 joinButton.setDisable(false);
                 ip.setDisable(false);
                 join_ip_tf.setDisable(false);
+                serverButton.setText("Start");
             }else{
                 SocketTask.startServer();
                 joinButton.setDisable(true);
                 ip.setDisable(true);
                 join_ip_tf.setDisable(true);
+                serverButton.setText("Stop");
             }
         });
         receiveButton.setOnAction(event -> {
@@ -93,11 +92,13 @@ public class MainController {
                 if (MainApplication.isSocketWork()) {
                     SocketTask.stop();
                     serverButton.setDisable(false);
+                    joinButton.setText("Connect");
                     ip.setDisable(false);
                 } else {
                     SocketTask.startSocket();
                     serverButton.setDisable(true);
                     ip.setDisable(true);
+                    joinButton.setText("Disconnect");
                 }
             }
         });
@@ -121,7 +122,9 @@ public class MainController {
         setScreens();
         screens.getSelectionModel().selectFirst();
     }
-
+    public void setJoin_ip_tfText(String text){
+        join_ip_tf.setText(text);
+    }
     private void setScreens(){
         for (Screen screen : Screen.getScreens()) {
             screens.getItems().add("Screen " + (Screen.getScreens().indexOf(screen) + 1));
@@ -138,7 +141,9 @@ public class MainController {
                 while (addresses.hasMoreElements() && MainApplication.isWork()) {
                     InetAddress addr = addresses.nextElement();
                     if (addr instanceof Inet4Address) {
-                        ip.getItems().add(addr.getHostAddress());
+                        if(!ip.getItems().contains(addr.getHostAddress())) {
+                            ip.getItems().add(addr.getHostAddress());
+                        }
                     }
                 }
             }
@@ -179,138 +184,4 @@ public class MainController {
             }
         }
     }
-    /*static OutputStream videoOutput;
-    static ServerSocket serverSocket;
-    static Socket client;
-    private static boolean sharing;
-    @FXML
-    public void test() {
-        //videoInput=SocketTask.getVideoInput();
-        if(tryServer()){
-            System.out.println(Tag + " test tryServer true ");
-            try {
-                videoOutput=client.getOutputStream();
-            } catch (IOException e) {
-                System.out.println(Tag + " test client.getInputStream " + e.getMessage());
-            }
-            if(videoOutput!=null){
-                //startReceiving();
-                startSharing();
-            }else stopServer();
-        }else System.out.println(Tag + " test tryServer false ");
-    }
-
-    private boolean tryServer(){
-        System.out.println(Tag + " tryServer");
-        InetAddress localhost=null;
-        try {
-            localhost = InetAddress.getByName(DeviceInfo.getIp());
-        } catch (UnknownHostException e) {
-            System.out.println(Tag + " tryServer InetAddress.getByName " + e.getMessage());
-            return false;
-        }
-        if(localhost!=null){
-            System.out.println(Tag + " localhost not null");
-            try {
-                serverSocket=new ServerSocket(DeviceInfo.getVideoPort(),0,localhost);
-            } catch (IOException e) {
-                System.out.println(Tag + " tryServer create ServerSocket " + e.getMessage());
-            }
-            if (serverSocket != null) {
-                Thread t = new Thread(()->{
-                    while (client==null && MainApplication.isWork()) {
-                        try {
-                            client = serverSocket.accept();
-                        } catch (IOException e) {
-                            System.out.println(Tag + " tryServer serverSocket.accept " + e.getMessage());
-                        }
-                        System.out.println(Tag + " tryServer client " + client);
-                    }
-                });
-                t.start();
-                try {
-                    t.join();
-                } catch (InterruptedException e) {
-                    System.out.println(Tag + "tryServer t.join " + e.getMessage());
-                    return false;
-                }
-                if(client!=null){
-                    return client.isConnected();
-                }
-            }
-        }
-        return false;
-    }
-    public static void stopServer(){
-        System.out.println(Tag + " stopServer");
-        if (client != null) {
-            try {
-                client.close();
-            } catch (IOException e) {
-                System.out.println(Tag + " stopServer client.close " + e.getMessage());
-            }
-        }
-        if(serverSocket!=null){
-            try {
-                serverSocket.close();
-            } catch (IOException e) {
-                System.out.println(Tag + " stopServer serverSocket.close " + e.getMessage());
-            }
-        }
-        stopSharing();
-        //stopReceiving();
-    }
-    public static void startSharing(){
-        sharing=true;
-        new Thread(()->{
-            Robot robot;
-            try {
-                robot = new Robot();
-            }  catch (AWTException e) {
-                System.out.println(Tag + " startSharing AWTException " + e.getMessage());
-                return;
-            }
-            ObjectOutputStream outstream=null;
-            while(sharing){
-                try{
-                    outstream = new ObjectOutputStream(videoOutput);
-                } catch (IOException e) {
-                    System.out.println(Tag + " startSharing new ObjectOutputStream " + e.getMessage());
-                    stopSharing();
-                    break;
-                }
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                Rectangle rectangle = new Rectangle(Toolkit.getDefaultToolkit().getScreenSize());
-                BufferedImage img =  robot.createScreenCapture(rectangle);
-                try {
-                    ImageIO.write(img, "jpg", baos);
-                } catch (IOException e) {
-                    System.out.println(Tag + " startSharing ImageIO.write " + e.getMessage());
-                    stopSharing();
-                    break;
-                }
-                byte[] imageData = baos.toByteArray();
-                try {
-                    outstream.writeObject(imageData);
-                    outstream.flush();
-                } catch (IOException e) {
-                    System.out.println(Tag + " startSharing outstream.writeObject/flush " + e.getMessage());
-                    if(e.getMessage().contains("Socket closed")||e.getMessage().contains("Broken pipe")){
-                        stopSharing();
-                        break;
-                    }
-                }
-            }
-            if(outstream!=null) {
-                try {
-                    outstream.close();
-                } catch (IOException e) {
-                    System.out.println(Tag + " startSharing outstream.close " + e.getMessage());
-                }
-            }
-        }).start();
-    }
-    public static void stopSharing(){
-        sharing=false;
-    }*/
 }

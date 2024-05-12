@@ -4,6 +4,7 @@ import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.VBox;
 
 import java.io.*;
 import java.util.concurrent.ExecutorService;
@@ -13,6 +14,8 @@ import java.util.concurrent.Future;
 public class ReceivingController {
     private static final String Tag = "ReceivingController";
     private static ReceivingController instance;
+
+
     public static ReceivingController getInstance(){
         return instance;
     }
@@ -20,6 +23,8 @@ public class ReceivingController {
 
     @FXML
     private ImageView imageView;
+    @FXML
+    private VBox receiveView;
 
     public void setImage(Image image) {
         imageView.setImage(image);
@@ -35,13 +40,12 @@ public class ReceivingController {
         stopReceiving();
         UI.showMainScene();
     }
-
     public void initialize(){
         initialize=true;
+        receiveView.widthProperty().addListener((observable, oldValue, newValue) -> imageView.setFitWidth(newValue.doubleValue()));
+        receiveView.heightProperty().addListener((observable, oldValue, newValue) -> imageView.setFitHeight(newValue.doubleValue()-35));
     }
     private static boolean receiving;
-    //private static ExecutorService executorService;
-    //private static Future<?> videoThread, audioThread;
     private InputStream videoInput;
     public void startReceiving(){
         System.out.println(Tag + " startReceiving");
@@ -49,21 +53,21 @@ public class ReceivingController {
             return;
         }
         receiving=true;
-        //executorService= Executors.newFixedThreadPool(2);
         videoInput = SocketTask.getVideoInput();
         new Thread(() -> {
             if (videoInput == null) {
                 SocketTask.stop();
-                stopReceiving();
+                Platform.runLater(ReceivingController::stopReceiving);
             } else {
-                while (receiving) {
-                    if(!MainApplication.isWork()||!MainApplication.isClientWork()){
-                        stopReceiving();
+                while (receiving && MainApplication.isWork()) {
+                    if(!MainApplication.isClientWork()){
+                        Platform.runLater(ReceivingController::stopReceiving);
                         return;
                     }
                     readObj();
                 }
             }
+            System.out.println(Tag + " receiving thread stop");
         }).start();
     }
     private void readObj(){
@@ -72,7 +76,7 @@ public class ReceivingController {
             ois = new ObjectInputStream(videoInput);
         } catch (IOException e) {
             System.out.println(Tag + " readObj new ObjectInputStream " + e.getMessage());
-            stopReceiving();
+            Platform.runLater(ReceivingController::stopReceiving);
             return;
         }
         Object obj = null;
@@ -81,10 +85,9 @@ public class ReceivingController {
         } catch (IOException e) {
             System.out.println(Tag + " readObj ois.readObject IOException " + e.getMessage());
             if(e.getMessage().contains("Socket closed")||e.getMessage().contains("Broken pipe")){
-                stopReceiving();
+                Platform.runLater(ReceivingController::stopReceiving);
                 return;
             }
-            //stopServer();
         } catch (ClassNotFoundException e) {
             System.out.println(Tag + " readObj ois.readObject ClassNotFoundException " + e.getMessage());
         }
@@ -103,19 +106,6 @@ public class ReceivingController {
     public static void stopReceiving() {
         System.out.println(Tag + " stopReceiving");
         receiving = false;
-        //if(videoThread!=null) {
-        //    videoThread.cancel(true);
-        //    videoThread=null;
-        //}
-        //if(audioThread!=null){
-        //    audioThread.cancel(true);
-        //    audioThread=null;
-        //}
-        //if(executorService!=null){
-        //    executorService.shutdown();
-        //    executorService.close();
-        //    executorService=null;
-        //}
         if (MainApplication.isWork()) UI.showMainScene();
     }
 

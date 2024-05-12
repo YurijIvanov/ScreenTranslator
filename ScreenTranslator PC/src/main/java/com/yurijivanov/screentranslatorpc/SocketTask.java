@@ -9,8 +9,8 @@ import java.net.Socket;
 
 public class SocketTask {
     private static final String Tag = "SocketTask";
-    private static ServerSocket videoServer, audioServer, commandServer;
-    private static Socket videoSocket, audioSocket, commandSocket;
+    private static ServerSocket videoServer, /*audioServer,*/ commandServer;
+    private static Socket videoSocket, /*audioSocket,*/ commandSocket;
     private static boolean stop;
     private static boolean task;
 
@@ -44,8 +44,8 @@ public class SocketTask {
         MainApplication.setClientWork(true);
         commandServer = createServer(DeviceInfo.getCommandPort());
         videoServer = createServer(DeviceInfo.getVideoPort());
-        audioServer = createServer(DeviceInfo.getAudioPort());
-        if (commandServer == null || videoServer == null || audioServer == null) {
+        //audioServer = createServer(DeviceInfo.getAudioPort());
+        if (commandServer == null || videoServer == null /*|| audioServer == null*/) {
             stop();
         } else {
             new Thread(()->{
@@ -53,6 +53,10 @@ public class SocketTask {
                 while(MainApplication.isWork()&&MainApplication.isClientWork()&&commandSocket==null){
                     commandSocket = createClient(commandServer);
                     if (commandSocket != null) {
+                        MainController intense = MainController.getInstance();
+                        if(intense!=null) {
+                            Platform.runLater(()->intense.setJoin_ip_tfText(commandSocket.getInetAddress().getHostAddress()));
+                        }
                         System.out.println(Tag + " startServer commandSocket created");
                     }
                 }
@@ -69,7 +73,7 @@ public class SocketTask {
                 }
                 System.out.println(Tag + " startServer videoSocket thread end");
             }).start();
-            new Thread(()->{
+            /*new Thread(()->{
                 System.out.println(Tag + " startServer audioSocket thread start");
                 while(MainApplication.isWork()&&MainApplication.isClientWork()&&audioSocket==null){
                     audioSocket = createClient(audioServer);
@@ -79,7 +83,7 @@ public class SocketTask {
                     changeUi(true);
                 }
                 System.out.println(Tag + " startServer audioSocket thread end");
-            }).start();
+            }).start();*/
             checkStop();
         }
     }
@@ -110,7 +114,7 @@ public class SocketTask {
             }
             System.out.println(Tag + " startSocket videoSocket thread end");
         }).start();
-        new Thread(()->{
+        /*new Thread(()->{
             System.out.println(Tag + " startSocket audioSocket thread start");
             while(MainApplication.isWork()&&MainApplication.isSocketWork()&&audioSocket==null){
                 audioSocket = createSocket(DeviceInfo.getAudioPort());
@@ -120,7 +124,7 @@ public class SocketTask {
                 changeUi(true);
             }
             System.out.println(Tag + " startSocket audioSocket thread end");
-        }).start();
+        }).start();*/
     }
     private static void checkStop() {
         new Thread(()->{
@@ -155,18 +159,19 @@ public class SocketTask {
                     break;
                 }
             }
+            System.out.println(Tag + " checkStop thread stop");
         }).start();
     }
     public static void stop(){
         System.out.println(Tag + " stop");
         MainApplication.setClientWork(false);
         MainApplication.setSocketWork(false);
-        if(commandSocket!=null){
-            if(stop) {
-                Thread t = new Thread(() -> {
+        if(stop) {
+            Thread t = new Thread(() -> {
+                if(commandSocket!=null){
                     OutputStream cos = getCommandOutputStream();
                     BufferedWriter buf;
-                    if(cos !=null) {
+                    if (cos != null) {
                         buf = new BufferedWriter(new OutputStreamWriter(cos));
                         System.out.println(Tag + " stop BufferedWriter created");
                         try {
@@ -180,28 +185,29 @@ public class SocketTask {
                             System.out.println(Tag + " BufferedWriter close error" + e.getMessage());
                         }
                     }
-                });
-                t.start();
-                try {
-                    t.join();
-                } catch (InterruptedException e) {
-                    System.out.println(Tag + " t.join error" + e.getMessage());
+                    try {
+                        commandSocket.close();
+                    } catch (IOException e) {
+                        System.out.println(Tag + " commandSocket close error" + e.getMessage());
+                    }
+                    commandSocket = null;
                 }
-            }
+                if(commandServer!=null){
+                    try {
+                        commandServer.close();
+                    } catch (IOException e) {
+                        System.out.println(Tag + " commandServer close error" + e.getMessage());
+                    }
+                    commandServer=null;
+                }
+                System.out.println(Tag + " t end");
+            });
+            t.start();
             try {
-                commandSocket.close();
-            } catch (IOException e) {
-                System.out.println(Tag + " commandSocket close error" + e.getMessage());
+                t.join();
+            } catch (InterruptedException e) {
+                System.out.println(Tag + " t.join error" + e.getMessage());
             }
-            commandSocket=null;
-        }
-        if(commandServer!=null){
-            try {
-                commandServer.close();
-            } catch (IOException e) {
-                System.out.println(Tag + " commandServer close error" + e.getMessage());
-            }
-            commandServer=null;
         }
         if(videoSocket!=null){
             try {
@@ -219,7 +225,7 @@ public class SocketTask {
             }
             videoServer=null;
         }
-        if(audioSocket!=null){
+        /*if(audioSocket!=null){
             try {
                 audioSocket.close();
             } catch (IOException e) {
@@ -234,7 +240,7 @@ public class SocketTask {
                 System.out.println(Tag + " videoServer close error" + e.getMessage());
             }
             audioServer=null;
-        }
+        }*/
         changeUi(false);
     }
     public static OutputStream getCommandOutputStream(){
@@ -263,7 +269,7 @@ public class SocketTask {
         }
         return null;
     }
-    public static OutputStream getAudioOutputStream(){
+    /*public static OutputStream getAudioOutputStream(){
         if(audioSocket!=null && audioSocket.isConnected() && !audioSocket.isClosed()) {
             try {
                 return audioSocket.getOutputStream();
@@ -275,7 +281,7 @@ public class SocketTask {
             }
         }
         return null;
-    }
+    }*/
     public static InputStream getCommandInput(){
         if(commandSocket!=null && commandSocket.isConnected() && !commandSocket.isClosed()) {
             try {
@@ -302,7 +308,7 @@ public class SocketTask {
         }
         return null;
     }
-    public static InputStream getAudioInput(){
+    /*public static InputStream getAudioInput(){
         if(audioSocket!=null && audioSocket.isConnected() && !audioSocket.isClosed()) {
             try {
                 return audioSocket.getInputStream();
@@ -314,15 +320,16 @@ public class SocketTask {
             }
         }
         return null;
-    }
+    }*/
     public static void changeUi(boolean bol) {
-        boolean vision = bol && ((videoSocket!=null && videoSocket.isConnected()&& !videoSocket.isClosed()) && (audioSocket!=null && audioSocket.isConnected()&& !audioSocket.isClosed()));
+        boolean vision = bol && ((videoSocket!=null && videoSocket.isConnected()&& !videoSocket.isClosed())
+                /*&& (audioSocket!=null && audioSocket.isConnected()&& !audioSocket.isClosed())*/);
         MainController intense = MainController.getInstance();
         if(intense!=null) {
             Platform.runLater(()->intense.changeUi(vision,task));
         }
         if(!vision){
-            if(task) if(ReceivingController.isReceiving()) ReceivingController.stopReceiving();
+            if(task) if(ReceivingController.isReceiving()) Platform.runLater(ReceivingController::stopReceiving);
             else if(MainApplication.isSharing()) MainApplication.stopSharing();
         }
     }

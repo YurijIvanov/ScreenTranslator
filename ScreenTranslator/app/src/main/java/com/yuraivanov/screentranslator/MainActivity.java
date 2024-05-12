@@ -1,5 +1,4 @@
 package com.yuraivanov.screentranslator;
-
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
@@ -31,13 +30,11 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationManagerCompat;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -47,7 +44,6 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.Enumeration;
-
 public class MainActivity extends AppCompatActivity{
     private static final int AUDIO_REQUEST_CODE = 103;
     private static final int RECORD_REQUEST_CODE = 101;
@@ -76,7 +72,6 @@ public class MainActivity extends AppCompatActivity{
     @SuppressLint("StaticFieldLeak")
     private static Spinner spinner;
     private ArrayAdapter<String> spinAdapter;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -189,7 +184,9 @@ public class MainActivity extends AppCompatActivity{
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION}, PERMISSION_REQUEST_CODE);
         }
     }
-
+    public static void setIpJoinEditText(String text){
+        ipJoinEditText.setText(text);
+    }
     public static boolean isClientWork() {
         return clientWork;
     }
@@ -197,15 +194,12 @@ public class MainActivity extends AppCompatActivity{
     public static void setClientWork(boolean clientWork) {
         MainActivity.clientWork = clientWork;
     }
-
     public static boolean isSocketWork() {
         return socketWork;
     }
-
     public static void setSocketWork(boolean socketWork) {
         MainActivity.socketWork = socketWork;
     }
-
     public static boolean isWork() {
         return work;
     }
@@ -271,7 +265,6 @@ public class MainActivity extends AppCompatActivity{
             startActivityForResult(screenCaptureIntent,RECORD_REQUEST_CODE);
         }else initRecording();
     }
-
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -460,13 +453,11 @@ public class MainActivity extends AppCompatActivity{
         }
         return false;
     }
-
     @Override
     protected void onStop() {
         super.onStop();
         Log.d(TAG, "onStop");
     }
-
     @Override
     protected void onDestroy() {
         super.onDestroy();

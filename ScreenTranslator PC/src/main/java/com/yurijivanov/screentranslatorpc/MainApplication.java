@@ -17,7 +17,7 @@ import java.io.OutputStream;
 
 public class MainApplication extends Application {
     private final static String Tag = "MainApplication";
-    private static boolean sharing, work, socketWork=false, clientWork=false;
+    private static boolean sharing, work=true, socketWork=false, clientWork=false;
     public static boolean isWork() {
         return work;
     }
@@ -57,12 +57,12 @@ public class MainApplication extends Application {
 
     @Override
     public void stop() throws Exception {
+        System.out.println(Tag +" stop()");
         work=false;
         socketWork=false;
         clientWork=false;
         sharing=false;
         SocketTask.stop();
-        //MainController.stopServer();
         ReceivingController.stopReceiving();
         stopSharing();
         super.stop();
@@ -76,7 +76,7 @@ public class MainApplication extends Application {
                 OutputStream videoOutput = SocketTask.getVideoOutputStream();
                 ObjectOutputStream outstream = null;
                 if(videoOutput!=null) {
-                    while (sharing) {
+                    while (sharing && work) {
                         try {
                             outstream = new ObjectOutputStream(videoOutput);
                         } catch (IOException e) {
@@ -119,13 +119,18 @@ public class MainApplication extends Application {
             } catch (AWTException e) {
                 System.out.println(Tag + " startSharing AWTException " + e.getMessage());
             }
+            System.out.println(Tag + " sharing thread stop");
         }).start();
     }
     public static void stopSharing(){
+        System.out.println(Tag + " stopSharing");
         sharing=false;
     }
 
     public static void main(String[] args) {
+        System.out.println(Tag + " main()");
         launch();
+        System.out.println(Tag + " main() -> launch()");
+        System.exit(0);
     }
 }

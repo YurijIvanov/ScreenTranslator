@@ -3,7 +3,6 @@ package com.yurijivanov.screentranslatorpc;
 public class DeviceInfo {
     private static String ip="", ipJoin="";
     private static int commandPort = 8001, videoPort = 8002, audioPort = 8003;
-    //private static DisplayMetrics metrics;
     public static String getIp() {
         return ip;
     }
@@ -42,12 +41,4 @@ public class DeviceInfo {
     public static void setCommandPort(int commandPort) {
         DeviceInfo.commandPort = commandPort;
     }
-
-    /*public static DisplayMetrics getMetrics() {
-        return metrics;
-    }
-
-    public static void setMetrics(DisplayMetrics metrics) {
-        DeviceInfo.metrics = metrics;
-    }*/
 }

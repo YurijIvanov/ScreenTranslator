@@ -1,0 +1,23 @@
+<component name="ArtifactManager">
+  <artifact name="ScreenTranslatorPC:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/ScreenTranslatorPC</output-path>
+    <root id="root">
+      <element id="archive" name="ScreenTranslatorPC.jar">
+        <element id="module-output" name="ScreenTranslatorPC.main" />
+      </element>
+      <element id="library" level="project" name="Gradle: org.openjfx:javafx-controls:win:20.0.1" />
+      <element id="library" level="project" name="Gradle: org.openjfx:javafx-base:20.0.1" />
+      <element id="library" level="project" name="Gradle: org.openjfx:javafx-fxml:win:20.0.1" />
+      <element id="library" level="project" name="Gradle: org.openjfx:javafx-graphics:20.0.1" />
+      <element id="library" level="project" name="Gradle: org.opentest4j:opentest4j:1.2.0" />
+      <element id="library" level="project" name="Gradle: org.junit.jupiter:junit-jupiter-api:5.9.2" />
+      <element id="library" level="project" name="Gradle: org.openjfx:javafx-controls:20.0.1" />
+      <element id="library" level="project" name="Gradle: org.junit.platform:junit-platform-commons:1.9.2" />
+      <element id="library" level="project" name="Gradle: org.junit.platform:junit-platform-engine:1.9.2" />
+      <element id="library" level="project" name="Gradle: org.junit.jupiter:junit-jupiter-engine:5.9.2" />
+      <element id="library" level="project" name="Gradle: org.openjfx:javafx-fxml:20.0.1" />
+      <element id="library" level="project" name="Gradle: org.openjfx:javafx-graphics:win:20.0.1" />
+      <element id="library" level="project" name="Gradle: org.openjfx:javafx-base:win:20.0.1" />
+    </root>
+  </artifact>
+</component>

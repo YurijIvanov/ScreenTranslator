@@ -62,6 +62,7 @@ public class SocketTask {
                 while(MainActivity.isWork()&&MainActivity.isClientWork()&&commandSocket==null){
                     commandSocket = createClient(commandServer);
                     if (commandSocket != null) {
+                        MainActivity.setIpJoinEditText(commandSocket.getInetAddress().getHostAddress());
                         Log.d(Tag, "startServer commandSocket created");
                     }
                 }
