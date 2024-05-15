@@ -6,7 +6,7 @@
 <?import javafx.scene.layout.*?>
 
 <VBox fx:id="receiveView" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.yurijivanov.screentranslatorpc.ReceivingController">
-    <ImageView fx:id="imageView" fitHeight="350" fitWidth="550" />
+    <ImageView fx:id="imageView" fitHeight="350" fitWidth="550" preserveRatio="true"/>
     <Separator prefWidth="200.0" />
     <Button alignment="BOTTOM_LEFT" mnemonicParsing="false" onAction="#goMain" text="Back" prefHeight="25" prefWidth="43" />
     <padding>

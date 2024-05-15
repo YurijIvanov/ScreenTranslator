@@ -42,7 +42,7 @@ public class ReceivingController {
     }
     public void initialize(){
         initialize=true;
-        receiveView.widthProperty().addListener((observable, oldValue, newValue) -> imageView.setFitWidth(newValue.doubleValue()));
+        receiveView.widthProperty().addListener((observable, oldValue, newValue) -> imageView.setFitWidth(newValue.doubleValue()-20));
         receiveView.heightProperty().addListener((observable, oldValue, newValue) -> imageView.setFitHeight(newValue.doubleValue()-35));
     }
     private static boolean receiving;

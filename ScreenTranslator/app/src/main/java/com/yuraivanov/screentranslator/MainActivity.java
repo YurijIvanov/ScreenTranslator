@@ -43,6 +43,7 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.nio.ByteBuffer;
 import java.util.Enumeration;
 public class MainActivity extends AppCompatActivity{
     private static final int AUDIO_REQUEST_CODE = 103;
@@ -312,13 +313,27 @@ public class MainActivity extends AppCompatActivity{
                 @Override
                 public void onCapturedContentResize(int width, int height) {
                     super.onCapturedContentResize(width, height);
+                    Log.d(TAG + " onCapturedContentResize",width + " " + height);
+                    if(virtualDisplay!=null){
+                        if(imageReader!=null && imageReader.getHeight()!=height){
+                            virtualDisplay.resize(width,height,metrics.densityDpi);
+                            imageReader.close();
+                            imageReader = ImageReader.newInstance(width, height, PixelFormat.RGBA_8888, 1);
+                            virtualDisplay.setSurface(imageReader.getSurface());
+                            imageReader.setOnImageAvailableListener(reader -> {
+                                Log.d(TAG + " onCapturedContentResize","Image available");
+                                sendImage(reader.acquireLatestImage());
+                            }, h);
+                        }
+                    }
                 }
                 @Override
                 public void onCapturedContentVisibilityChanged(boolean isVisible) {
                     super.onCapturedContentVisibilityChanged(isVisible);
                 }
             }, h);
-            imageReader = ImageReader.newInstance(metrics.widthPixels, metrics.heightPixels, PixelFormat.RGBA_8888, 1);
+            if(imageReader==null)
+                imageReader = ImageReader.newInstance(metrics.widthPixels, metrics.heightPixels, PixelFormat.RGBA_8888, 1);
             virtualDisplay = mediaProjection.createVirtualDisplay("screen", metrics.widthPixels, metrics.heightPixels, metrics.densityDpi,
                     DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR, imageReader.getSurface(), new VirtualDisplay.Callback() {
                         @Override
@@ -332,45 +347,47 @@ public class MainActivity extends AppCompatActivity{
                         @Override
                         public void onStopped() {
                             super.onStopped();
-                            if(virtualDisplay!=null) {
-                                virtualDisplay.release();
-                                virtualDisplay = null;
-                            }
-                            if(imageReader!=null){
-                                imageReader.close();
-                                imageReader=null;
-                            }
                         }
                     }, h);
-            imageReader.setOnImageAvailableListener(reader -> {
-                Log.d(TAG + " imageReader","Image available");
-                Image image = reader.acquireLatestImage();
-                if (image!=null) {
-                    Log.d(TAG,"image width = " + (image.getWidth()+8) + "; height = " + image.getHeight() + ";\nmetrics width = " + metrics.widthPixels + "; height = " + metrics.heightPixels + ";");
-                    Bitmap bitmap = Bitmap.createBitmap(image.getWidth()+8,image.getHeight(), Bitmap.Config.ARGB_8888);
-                    Log.d(TAG,"math width =" + (metrics.widthPixels + (image.getPlanes()[0].getRowStride() - image.getPlanes()[0].getPixelStride() * metrics.widthPixels) / image.getPlanes()[0].getPixelStride()));
-                    bitmap.copyPixelsFromBuffer(image.getPlanes()[0].getBuffer());
-                    ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
-                    byte[] imageBytes = stream.toByteArray();
-                    ObjectOutputStream bos;
-                    try {
-                        bos = new ObjectOutputStream(videoOutputStream);
-                    } catch (IOException e) {
-                        Log.e(TAG, "new ObjectOutputStream error " + e.getMessage());
-                        stopSharing();
-                        SocketTask.stop();
-                        return;
-                    }
-                    try {
-                        bos.writeObject(imageBytes);
-                        bos.flush();
-                    } catch (IOException e) {
-                        Log.e(TAG, "reader bos error " + e.getMessage());
-                    }
-                    image.close();
-                }
-            }, h);
+            if(imageReader!=null) {
+                imageReader.setOnImageAvailableListener(reader -> {
+                    Log.d(TAG + " imageReader", "Image available");
+                    sendImage(reader.acquireLatestImage());
+                }, h);
+            }
+        }
+    }
+    private void sendImage(Image image){
+        if (image!=null) {
+            //Log.d(TAG,"image width = " + (image.getWidth()+8) + "; height = " + image.getHeight() + ";\nmetrics width = " + metrics.widthPixels + "; height = " + metrics.heightPixels + ";");
+            Image.Plane[] planes = image.getPlanes();
+            ByteBuffer buffer = planes[0].getBuffer();
+            int pixelStride = planes[0].getPixelStride();
+            int rowStride = planes[0].getRowStride();
+            int rowPadding = rowStride - pixelStride * image.getWidth();
+            Bitmap bitmap = Bitmap.createBitmap(image.getWidth()+rowPadding/pixelStride,
+                    image.getHeight(), Bitmap.Config.ARGB_8888);
+            //Log.d(TAG,"math width =" + (metrics.widthPixels + (image.getPlanes()[0].getRowStride() - image.getPlanes()[0].getPixelStride() * metrics.widthPixels) / image.getPlanes()[0].getPixelStride()));
+            bitmap.copyPixelsFromBuffer(image.getPlanes()[0].getBuffer());
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+            byte[] imageBytes = stream.toByteArray();
+            ObjectOutputStream bos;
+            try {
+                bos = new ObjectOutputStream(videoOutputStream);
+            } catch (IOException e) {
+                Log.e(TAG, "new ObjectOutputStream error " + e.getMessage());
+                stopSharing();
+                SocketTask.stop();
+                return;
+            }
+            try {
+                bos.writeObject(imageBytes);
+                bos.flush();
+            } catch (IOException e) {
+                Log.e(TAG, "reader bos error " + e.getMessage());
+            }
+            image.close();
         }
     }
     public static void stopSharing() {
