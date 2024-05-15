@@ -18,26 +18,5 @@ public class NotificationButton extends BroadcastReceiver {
             NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
             notificationManager.cancel(NOTIFICATION_ID);
         }
-        /*Intent data = intent.getParcelableExtra("data");
-        switch (intent.getAction()) {
-            case "ACTION_CANSEL" -> {
-                Log.d("MEDIAPROJECTION","ACTION_CANSEL");
-                MainActivity.stopRecording();
-                NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
-                notificationManager.cancel(NOTIFICATION_ID);
-            }
-            case "START_CAPTURE" -> {
-                Log.d("MEDIAPROJECTION","START_CAPTURE");
-                //mediaProjection = MainActivity.getMediaProjectionManager().getMediaProjection(-1, data);
-                if(mediaProjection==null){
-                    Log.e("MEDIAPROJECTION","NULL");
-                    MainActivity.stopRecording();
-                    NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
-                    notificationManager.cancel(NOTIFICATION_ID);
-                }else{
-                    Log.e("MEDIAPROJECTION","NOT NULL");
-                }
-            }
-        }*/
     }
 }

@@ -69,6 +69,7 @@ public class MainActivity extends AppCompatActivity{
     private static Intent surfaceActivity;
     private static HandlerThread handlerThread;
     private static Handler h;
+    private Handler handler = new Handler(Looper.getMainLooper());
     private OutputStream videoOutputStream/*, audioOutputStream*/;
     @SuppressLint("StaticFieldLeak")
     private static Spinner spinner;
@@ -279,7 +280,7 @@ public class MainActivity extends AppCompatActivity{
             }
         }
     }
-    private Handler handler = new Handler(Looper.getMainLooper());
+
     private void initRecording() {
         if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             Log.e(TAG, "Manifest permission record audio DENIED");
@@ -361,7 +362,6 @@ public class MainActivity extends AppCompatActivity{
         if (image!=null) {
             //Log.d(TAG,"image width = " + (image.getWidth()+8) + "; height = " + image.getHeight() + ";\nmetrics width = " + metrics.widthPixels + "; height = " + metrics.heightPixels + ";");
             Image.Plane[] planes = image.getPlanes();
-            ByteBuffer buffer = planes[0].getBuffer();
             int pixelStride = planes[0].getPixelStride();
             int rowStride = planes[0].getRowStride();
             int rowPadding = rowStride - pixelStride * image.getWidth();

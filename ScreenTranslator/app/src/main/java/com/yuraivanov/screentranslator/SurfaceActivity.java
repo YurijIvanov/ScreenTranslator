@@ -132,7 +132,6 @@ public class SurfaceActivity extends AppCompatActivity {
         Log.d(TAG,"onDestroy");
         stopReceiving();
         //MainActivity.stopSharing();
-        //GetClientService.stopReceiving();
     }
 
     public static boolean isReceiving() {
