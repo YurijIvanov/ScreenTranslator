@@ -6,11 +6,7 @@ import javafx.scene.control.TextField;
 
 public class SettingsController{
     @FXML
-    private TextField command_port_tf;
-    @FXML
-    private TextField video_port_tf;
-    @FXML
-    private TextField audio_port_tf;
+    private TextField command_port_tf, video_port_tf, audio_port_tf;
     private final String Tag = "SettingsController";
 
     @FXML

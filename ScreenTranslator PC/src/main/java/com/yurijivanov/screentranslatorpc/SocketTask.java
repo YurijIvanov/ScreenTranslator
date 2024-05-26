@@ -1,6 +1,9 @@
 package com.yurijivanov.screentranslatorpc;
 
 import javafx.application.Platform;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
+import java.util.Optional;
 
 import java.io.*;
 import java.net.InetAddress;
@@ -11,12 +14,11 @@ public class SocketTask {
     private static final String Tag = "SocketTask";
     private static ServerSocket videoServer, /*audioServer,*/ commandServer;
     private static Socket videoSocket, /*audioSocket,*/ commandSocket;
-    private static boolean stop;
-    private static boolean task;
+    private static boolean stop, task, agree;
 
     private static ServerSocket createServer(int port){
         try {
-            return new ServerSocket(port, 0, InetAddress.getByName(DeviceInfo.getIp()));
+            return new ServerSocket(port, 1, InetAddress.getByName(DeviceInfo.getIp()));
         } catch (IOException e) {
             System.out.println(Tag + " commandServer create " + e.getMessage());
         }
@@ -41,6 +43,7 @@ public class SocketTask {
         System.out.println(Tag + " startServer");
         task=true;
         stop=true;
+        agree=false;
         MainApplication.setClientWork(true);
         commandServer = createServer(DeviceInfo.getCommandPort());
         videoServer = createServer(DeviceInfo.getVideoPort());
@@ -53,11 +56,13 @@ public class SocketTask {
                 while(MainApplication.isWork()&&MainApplication.isClientWork()&&commandSocket==null){
                     commandSocket = createClient(commandServer);
                     if (commandSocket != null) {
-                        MainController intense = MainController.getInstance();
-                        if(intense!=null) {
-                            Platform.runLater(()->intense.setJoin_ip_tfText(commandSocket.getInetAddress().getHostAddress()));
-                        }
                         System.out.println(Tag + " startServer commandSocket created");
+                        MainController intense = MainController.getInstance();
+                        if (intense != null) {
+                            Platform.runLater(() -> intense.setJoin_ip_tfText(commandSocket.getInetAddress().getHostAddress()));
+                        }
+                        checkDialog(()-> agree=true, SocketTask::stop);
+                        //passPassword();
                     }
                 }
                 System.out.println(Tag + " startServer commandSocket thread end");
@@ -65,11 +70,12 @@ public class SocketTask {
             new Thread(()->{
                 System.out.println(Tag + " startServer videoSocket thread start");
                 while(MainApplication.isWork()&&MainApplication.isClientWork()&&videoSocket==null){
-                    videoSocket = createClient(videoServer);
+                    if(agree)
+                        videoSocket = createClient(videoServer);
                     if (videoSocket != null) {
                         System.out.println(Tag + " startServer videoSocket created");
+                        changeUi(true);
                     }
-                    changeUi(true);
                 }
                 System.out.println(Tag + " startServer videoSocket thread end");
             }).start();
@@ -87,7 +93,65 @@ public class SocketTask {
             checkStop();
         }
     }
-
+    private static void checkDialog(Runnable yesAction, Runnable noAction){
+        Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Server connect");
+            alert.setHeaderText(null);
+            alert.setContentText("Connected ip: " + commandSocket.getInetAddress().getHostAddress());
+            ButtonType buttonYes = new ButtonType("Да");
+            ButtonType buttonNo = new ButtonType("Нет");
+            alert.getButtonTypes().setAll(buttonYes, buttonNo);
+            Optional<ButtonType> result = alert.showAndWait();
+            if (result.isPresent() && result.get() == buttonYes) {
+                yesAction.run();
+            } else {
+                noAction.run();
+            }
+        });
+    }
+    /*private static boolean checkPassword(){
+        System.out.println(Tag + " checkPasswor()");
+        InputStream is = getCommandInput();
+        if(is!=null){
+            BufferedReader buf = new BufferedReader(new InputStreamReader(is));
+            //while (MainApplication.isWork()&&MainApplication.isClientWork()) {
+            try {
+                if(!buf.ready()){
+                    System.out.println(Tag + " buf unready");
+                    return false;
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            String command="";
+            try {
+                    command = buf.readLine();
+                    System.out.println(Tag + " command " + command);
+                } catch (IOException e) {
+                    System.out.println(Tag + " checkPassword " + " error: " + e.getMessage());
+                    //break;
+                }
+            return command != null && command.equals("ScreenTranslator -" + DeviceInfo.getThisPassword());
+            //}
+        }
+        return false;
+    }
+    private static void passPassword(){
+        OutputStream out = getCommandOutputStream();
+        if(out!=null) {
+            BufferedWriter buf = new BufferedWriter(new OutputStreamWriter(out));
+            //for (int i = 0; i<10;i++) {
+                try {
+                    buf.write("ScreenTranslator -" + DeviceInfo.getJoinPassword());
+                    buf.flush();
+                } catch (IOException e) {
+                    System.out.println(Tag + " passPassword " + e.getMessage());
+                    stop();
+                }
+            //}
+        }else stop();
+    }*/
     public static void startSocket(){
         System.out.println(Tag + " startSocket");
         task=false;
@@ -98,7 +162,7 @@ public class SocketTask {
             while(MainApplication.isWork()&&MainApplication.isSocketWork()&&commandSocket==null){
                 commandSocket = createSocket(DeviceInfo.getCommandPort());
                 if (commandSocket != null) {
-                    System.out.println(Tag + " startSocket commandSocket created");
+                    System.out.println(Tag + " startServer commandSocket created");
                 }
             }
             System.out.println(Tag + " startSocket commandSocket thread end");
@@ -109,8 +173,8 @@ public class SocketTask {
                 videoSocket = createSocket(DeviceInfo.getVideoPort());
                 if (videoSocket != null) {
                     System.out.println(Tag + " startSocket videoSocket created");
+                    changeUi(true);
                 }
-                changeUi(true);
             }
             System.out.println(Tag + " startSocket videoSocket thread end");
         }).start();
@@ -329,8 +393,19 @@ public class SocketTask {
             Platform.runLater(()->intense.changeUi(vision,task));
         }
         if(!vision){
-            if(task) if(ReceivingController.isReceiving()) Platform.runLater(ReceivingController::stopReceiving);
-            else if(MainApplication.isSharing()) MainApplication.stopSharing();
+            if(task) {
+                if (ReceivingController.isReceiving()) {
+                    Platform.runLater(ReceivingController::stopReceiving);
+                }
+                if (intense != null) {
+                    Platform.runLater(intense::setBack);
+                }
+            }else{
+                if(MainApplication.isSharing()){
+                    MainApplication.stopSharing();
+                }
+            }
+
         }
     }
 }

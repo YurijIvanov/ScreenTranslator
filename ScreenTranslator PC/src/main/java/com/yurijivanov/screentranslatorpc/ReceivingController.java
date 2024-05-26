@@ -14,27 +14,23 @@ import java.util.concurrent.Future;
 public class ReceivingController {
     private static final String Tag = "ReceivingController";
     private static ReceivingController instance;
-
-
-    public static ReceivingController getInstance(){
-        return instance;
-    }
     private boolean initialize=false;
-
     @FXML
     private ImageView imageView;
     @FXML
     private VBox receiveView;
-
-    public void setImage(Image image) {
+    private static boolean receiving;
+    private InputStream videoInput;
+    private void setImage(Image image) {
         imageView.setImage(image);
         image.cancel();
     }
-
+    public static ReceivingController getInstance(){
+        return instance;
+    }
     public static void setInstance(ReceivingController instance) {
         ReceivingController.instance = instance;
     }
-
     @FXML
     private void goMain(){
         stopReceiving();
@@ -45,8 +41,6 @@ public class ReceivingController {
         receiveView.widthProperty().addListener((observable, oldValue, newValue) -> imageView.setFitWidth(newValue.doubleValue()-20));
         receiveView.heightProperty().addListener((observable, oldValue, newValue) -> imageView.setFitHeight(newValue.doubleValue()-35));
     }
-    private static boolean receiving;
-    private InputStream videoInput;
     public void startReceiving(){
         System.out.println(Tag + " startReceiving");
         if(!instance.initialize){

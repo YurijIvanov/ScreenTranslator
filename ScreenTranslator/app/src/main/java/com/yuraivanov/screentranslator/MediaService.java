@@ -19,11 +19,8 @@ import androidx.core.app.NotificationCompat;
 public class MediaService extends Service {
     private static final int NOTIFICATION_ID = 101;
     private static Intent mainIntent;
-    public static boolean isRecording=true;
     private static final String CHANNEL_ID = "ScreeTranslator", TAG="MediaService";
     private NotificationManager manager;
-    public MediaService() {
-    }
 
     @Override
     public IBinder onBind(Intent intent) {

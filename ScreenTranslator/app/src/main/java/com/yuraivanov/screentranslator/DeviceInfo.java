@@ -1,4 +1,8 @@
 package com.yuraivanov.screentranslator;
+
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
 public class DeviceInfo {
     private static String ip="", ipJoin="";
     private static int commandPort = 8001, videoPort = 8002, audioPort = 8003;

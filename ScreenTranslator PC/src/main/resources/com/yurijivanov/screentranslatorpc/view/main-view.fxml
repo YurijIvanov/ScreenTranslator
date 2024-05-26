@@ -18,13 +18,11 @@
       </Label>
       <Separator />
       <HBox alignment="CENTER" HBox.hgrow="ALWAYS">
-
          <Label text="IP:">
             <font>
                <Font size="14.0" />
             </font>
          </Label>
-
          <Separator orientation="VERTICAL" HBox.hgrow="ALWAYS" />
          <ChoiceBox fx:id="ip" prefHeight="30.0" prefWidth="203.0" style="-fx-font-size: 14px;">
          </ChoiceBox>
@@ -55,7 +53,7 @@
             <Font size="32.0" />
          </font>
       </Label>
-      <Separator prefWidth="200.0" />
+      <Separator />
       <HBox alignment="CENTER" HBox.hgrow="ALWAYS">
          <Label text="IP:">
             <font>
@@ -66,7 +64,7 @@
          <TextField fx:id="join_ip_tf" prefHeight="39.0" prefWidth="207.0" promptText="192.168.1.100" HBox.hgrow="ALWAYS" />
       </HBox>
 
-      <Separator prefWidth="200.0" />
+      <Separator/>
 
       <HBox alignment="CENTER" HBox.hgrow="ALWAYS">
 

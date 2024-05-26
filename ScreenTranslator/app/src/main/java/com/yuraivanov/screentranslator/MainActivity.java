@@ -1,4 +1,5 @@
 package com.yuraivanov.screentranslator;
+
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
@@ -30,11 +31,13 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationManagerCompat;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -43,7 +46,6 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
-import java.nio.ByteBuffer;
 import java.util.Enumeration;
 public class MainActivity extends AppCompatActivity{
     private static final int AUDIO_REQUEST_CODE = 103;
@@ -79,6 +81,7 @@ public class MainActivity extends AppCompatActivity{
         super.onCreate(savedInstanceState);
         MediaService.setMainIntent(getIntent());
         mediaService = new Intent(MainActivity.this, MediaService.class);
+        SocketTask.setContext(this);
         metrics=getResources().getDisplayMetrics();
         setContentView(R.layout.activity_main);
         ipJoinEditText=findViewById(R.id.editJoinIp);
@@ -109,7 +112,7 @@ public class MainActivity extends AppCompatActivity{
         serverButton.setOnClickListener(view -> {
             Log.d(TAG,"serverButton click");
             if (DeviceInfo.getIp() == null|| DeviceInfo.getIp().isEmpty()) {
-                new AlertDialog.Builder(context).setTitle("Empty input line").setMessage("The IP address entry line must not be empty, please enter IP address.").create();
+                new AlertDialog.Builder(context).setTitle("Empty input line").setMessage("The IP address entry line must not be empty, please enter IP address.").show();
             }else{
                 if(clientWork){
                     SocketTask.stop();
@@ -132,7 +135,7 @@ public class MainActivity extends AppCompatActivity{
         joinButton.setOnClickListener(view -> {
             Log.d(TAG,"joinButton click");
             if (DeviceInfo.getIpJoin() == null || DeviceInfo.getIpJoin().isEmpty()) {
-                new AlertDialog.Builder(context).setTitle("Empty input line").setMessage("The IP address entry line must not be empty, please enter IP address.").create();
+                new AlertDialog.Builder(context).setTitle("Empty input line").setMessage("The IP address entry line must not be empty, please enter IP address.").show();
             } else {
                 if(socketWork){
                     SocketTask.stop();
@@ -158,18 +161,15 @@ public class MainActivity extends AppCompatActivity{
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
             @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            }
             @Override
             public void afterTextChanged(Editable editable) {
-                String ipJoinString=ipJoinEditText.getText().toString();
-                if(ipJoinString.isEmpty()){
-                    new AlertDialog.Builder(context).setTitle("Empty input line").setMessage("The IP address entry line must not be empty, please enter IP address.").create();
-                }else if (isValidIP(ipJoinString)) {
-                    DeviceInfo.setIpJoin(ipJoinString);
-                } else {
-                    new AlertDialog.Builder(context).setTitle("Incorrect IP address").setMessage("IP address entered incorrectly, please check IP address.").create();
+                String newValue=ipJoinEditText.getText().toString();
+                if (!newValue.isEmpty() && isValidIP(newValue)) {
+                    DeviceInfo.setIpJoin(newValue);
                 }
-                Log.d(TAG, "ipJoinString= " + ipJoinString);
+                Log.d(TAG, "ipJoin newValue= " + newValue);
             }
         });
         findViewById(R.id.settingsButton).setOnClickListener(view -> startActivity(new Intent(this,SettingsActivity.class)));

@@ -9,10 +9,7 @@ import javafx.stage.Screen;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.*;
 import java.util.Enumeration;
 
@@ -41,35 +38,30 @@ public class MainController {
         System.out.println(Tag + " initialize");
         Alert alert=new Alert(Alert.AlertType.INFORMATION);
         join_ip_tf.textProperty().addListener(((observable, oldValue, newValue) -> {
-            alert.setHeaderText("IP join device");
-            if(newValue.isEmpty()){
-                alert.setContentText("Field is empty");
-                alert.show();
-            }else if(!oldValue.equals(newValue)){
-                if(MainApplication.isSocketWork()) {
-                    SocketTask.stop();
-                }
-                if(!isInValidIP(newValue)){
-                    alert.setContentText("IP address entered incorrectly, please check IP address.");
-                }else{
-                    DeviceInfo.setIpJoin(newValue);
-                }
+            if (!newValue.isEmpty() && isInValidIP(newValue)) {
+                DeviceInfo.setIpJoin(newValue);
             }
         }));
         serverButton.setOnAction(event -> {
             System.out.println(Tag + " serverButton event");
-            if(MainApplication.isClientWork()){
-                SocketTask.stop();
-                joinButton.setDisable(false);
-                ip.setDisable(false);
-                join_ip_tf.setDisable(false);
-                serverButton.setText("Start");
-            }else{
-                SocketTask.startServer();
-                joinButton.setDisable(true);
-                ip.setDisable(true);
-                join_ip_tf.setDisable(true);
-                serverButton.setText("Stop");
+            if (DeviceInfo.getIp() == null || DeviceInfo.getIp().isEmpty()) {
+                alert.setHeaderText("IP device");
+                alert.setContentText("Field is empty");
+                alert.show();
+            } else {
+                if (MainApplication.isClientWork()) {
+                    SocketTask.stop();
+                    joinButton.setDisable(false);
+                    ip.setDisable(false);
+                    join_ip_tf.setDisable(false);
+                    serverButton.setText("Start");
+                } else {
+                    SocketTask.startServer();
+                    joinButton.setDisable(true);
+                    ip.setDisable(true);
+                    join_ip_tf.setDisable(true);
+                    serverButton.setText("Stop");
+                }
             }
         });
         receiveButton.setOnAction(event -> {
@@ -86,20 +78,22 @@ public class MainController {
         });
         joinButton.setOnAction(event -> {
             System.out.println(Tag + " joinButton event");
-            if(DeviceInfo.getIpJoin().isEmpty()){
-                System.out.println(Tag + " joinButton event DeviceInfo.getIpJoin().isEmpty");
-            }else {
-                if (MainApplication.isSocketWork()) {
-                    SocketTask.stop();
-                    serverButton.setDisable(false);
-                    joinButton.setText("Connect");
-                    ip.setDisable(false);
-                } else {
-                    SocketTask.startSocket();
-                    serverButton.setDisable(true);
-                    ip.setDisable(true);
-                    joinButton.setText("Disconnect");
-                }
+            if(DeviceInfo.getIpJoin() == null || DeviceInfo.getIpJoin().isEmpty()){
+                alert.setHeaderText("IP join device");
+                alert.setContentText("Field is empty");
+                alert.show();
+            }else if (MainApplication.isSocketWork()) {
+                SocketTask.stop();
+                serverButton.setDisable(false);
+                ip.setDisable(false);
+                join_ip_tf.setDisable(false);
+                joinButton.setText("Connect");
+            } else {
+                SocketTask.startSocket();
+                serverButton.setDisable(true);
+                ip.setDisable(true);
+                join_ip_tf.setDisable(true);
+                joinButton.setText("Disconnect");
             }
         });
         shareButton.setOnAction(event -> {
@@ -121,6 +115,12 @@ public class MainController {
         });
         setScreens();
         screens.getSelectionModel().selectFirst();
+    }
+    public void setBack(){
+        serverButton.setText("Start");
+        joinButton.setDisable(false);
+        ip.setDisable(false);
+        join_ip_tf.setDisable(false);
     }
     public void setJoin_ip_tfText(String text){
         join_ip_tf.setText(text);
